@@ -128,6 +128,16 @@ func lookupHandle(handle unsafe.Pointer) any {
 	return lookupHandleVal(handle).val
 }
 
+// deleteHandle removes a handle from the map and frees memory.
+// This is used for cleaning up transient handles that are not associated
+// with a specific database connection.
+func deleteHandle(handle unsafe.Pointer) {
+	handleLock.Lock()
+	defer handleLock.Unlock()
+	delete(handleVals, handle)
+	C.free(handle)
+}
+
 func deleteHandles(db *SQLiteConn) {
 	handleLock.Lock()
 	defer handleLock.Unlock()
