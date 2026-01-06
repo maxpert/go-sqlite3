@@ -56,104 +56,188 @@ const (
 type TableFilter func(tableName string) bool
 
 // ConflictHandler is a callback function invoked when a conflict is detected
-// during changeset application. It receives the conflict type and an iterator
-// providing access to the change data and conflict values.
-// The iterator is only valid within the callback - do not store or use it outside.
+// during changeset application.
 type ConflictHandler func(conflictType ConflictType, iter *ChangesetIterator) ConflictAction
 
-// Session represents an SQLite session object used for tracking changes
-// to database tables.
+// Session represents an SQLite session object.
 type Session struct{}
 
 // ChangesetIterator represents an iterator over a changeset or patchset.
 type ChangesetIterator struct{}
 
-// CreateSession returns an error indicating that the session extension is not enabled.
+// Changegroup combines multiple changesets into one.
+type Changegroup struct{}
+
+// Rebaser rebases changesets after conflict resolution.
+type Rebaser struct{}
+
+// =============================================================================
+// Session methods
+// =============================================================================
+
 func (c *SQLiteConn) CreateSession(dbName string) (*Session, error) {
 	return nil, ErrSessionNotEnabled
 }
 
-// Close is a no-op when the session extension is not enabled.
 func (s *Session) Close() error {
 	return nil
 }
 
-// Attach returns an error indicating that the session extension is not enabled.
 func (s *Session) Attach(tableName string) error {
 	return ErrSessionNotEnabled
 }
 
-// Enable returns 0 when the session extension is not enabled.
-func (s *Session) Enable(enable int) int {
-	return 0
-}
-
-// IsEmpty returns true when the session extension is not enabled.
-func (s *Session) IsEmpty() bool {
-	return true
-}
-
-// Indirect returns 0 when the session extension is not enabled.
-func (s *Session) Indirect(indirect int) int {
-	return 0
-}
-
-// Changeset returns an error indicating that the session extension is not enabled.
-func (s *Session) Changeset() ([]byte, error) {
-	return nil, ErrSessionNotEnabled
-}
-
-// Patchset returns an error indicating that the session extension is not enabled.
-func (s *Session) Patchset() ([]byte, error) {
-	return nil, ErrSessionNotEnabled
-}
-
-// WriteChangeset returns an error indicating that the session extension is not enabled.
-func (s *Session) WriteChangeset(w io.Writer) error {
-	return ErrSessionNotEnabled
-}
-
-// WritePatchset returns an error indicating that the session extension is not enabled.
-func (s *Session) WritePatchset(w io.Writer) error {
-	return ErrSessionNotEnabled
-}
-
-// AttachTable returns an error indicating that the session extension is not enabled.
 func (s *Session) AttachTable(filter TableFilter) error {
 	return ErrSessionNotEnabled
 }
 
-// ApplyChangeset returns an error indicating that the session extension is not enabled.
-func (c *SQLiteConn) ApplyChangeset(changeset []byte, filter TableFilter, conflict ConflictHandler, flags ApplyFlags) error {
-	return ErrSessionNotEnabled
+func (s *Session) Enable(enable int) int {
+	return 0
 }
 
-// ApplyChangesetStream returns an error indicating that the session extension is not enabled.
-func (c *SQLiteConn) ApplyChangesetStream(r io.Reader, filter TableFilter, conflict ConflictHandler, flags ApplyFlags) error {
-	return ErrSessionNotEnabled
+func (s *Session) IsEmpty() bool {
+	return true
 }
 
-// ChangesetIteratorStart returns an error indicating that the session extension is not enabled.
-func ChangesetIteratorStart(changeset []byte, flags IteratorFlags) (*ChangesetIterator, error) {
+func (s *Session) Indirect(indirect int) int {
+	return 0
+}
+
+func (s *Session) Changeset() ([]byte, error) {
 	return nil, ErrSessionNotEnabled
 }
 
-// Next returns an error indicating that the session extension is not enabled.
-func (it *ChangesetIterator) Next() (bool, error) {
-	return false, ErrSessionNotEnabled
+func (s *Session) Patchset() ([]byte, error) {
+	return nil, ErrSessionNotEnabled
 }
 
-// Close is a no-op when the session extension is not enabled.
-func (it *ChangesetIterator) Close() error {
+func (s *Session) WriteChangeset(w io.Writer) error {
+	return ErrSessionNotEnabled
+}
+
+func (s *Session) WritePatchset(w io.Writer) error {
+	return ErrSessionNotEnabled
+}
+
+// =============================================================================
+// Apply methods
+// =============================================================================
+
+func (c *SQLiteConn) ApplyChangeset(r io.Reader, filter TableFilter, conflict ConflictHandler) error {
+	return ErrSessionNotEnabled
+}
+
+func (c *SQLiteConn) ApplyChangesetV2(r io.Reader, rebaseOut io.Writer, filter TableFilter, conflict ConflictHandler, flags ApplyFlags) error {
+	return ErrSessionNotEnabled
+}
+
+func (c *SQLiteConn) ApplyChangesetBytes(data []byte, filter TableFilter, conflict ConflictHandler) error {
+	return ErrSessionNotEnabled
+}
+
+// =============================================================================
+// Iterator constructors
+// =============================================================================
+
+func NewChangesetIterator(r io.Reader) (*ChangesetIterator, error) {
+	return nil, ErrSessionNotEnabled
+}
+
+func NewChangesetIteratorWithFlags(r io.Reader, flags IteratorFlags) (*ChangesetIterator, error) {
+	return nil, ErrSessionNotEnabled
+}
+
+func NewChangesetIteratorBytes(data []byte) (*ChangesetIterator, error) {
+	return nil, ErrSessionNotEnabled
+}
+
+// =============================================================================
+// Iterator methods
+// =============================================================================
+
+func (ci *ChangesetIterator) Next() bool {
+	return false
+}
+
+func (ci *ChangesetIterator) Op() (op int, tableName string, nCols int, indirect bool, err error) {
+	return 0, "", 0, false, ErrSessionNotEnabled
+}
+
+func (ci *ChangesetIterator) OldValue(i int) (interface{}, error) {
+	return nil, ErrSessionNotEnabled
+}
+
+func (ci *ChangesetIterator) NewValue(i int) (interface{}, error) {
+	return nil, ErrSessionNotEnabled
+}
+
+func (ci *ChangesetIterator) ConflictValue(i int) (interface{}, error) {
+	return nil, ErrSessionNotEnabled
+}
+
+func (ci *ChangesetIterator) FKConflicts() (int, error) {
+	return 0, ErrSessionNotEnabled
+}
+
+func (ci *ChangesetIterator) PK() ([]bool, error) {
+	return nil, ErrSessionNotEnabled
+}
+
+func (ci *ChangesetIterator) Err() error {
 	return nil
 }
 
-// Op returns an error indicating that the session extension is not enabled.
-func (it *ChangesetIterator) Op() (tableName string, numCols int, opType int, indirect bool, err error) {
-	return "", 0, 0, false, ErrSessionNotEnabled
+func (ci *ChangesetIterator) Close() error {
+	return nil
 }
 
-// PK returns an error indicating that the session extension is not enabled.
-func (it *ChangesetIterator) PK() ([]bool, error) {
+// =============================================================================
+// Utility functions
+// =============================================================================
+
+func InvertChangeset(r io.Reader, w io.Writer) error {
+	return ErrSessionNotEnabled
+}
+
+func ConcatChangesets(r1, r2 io.Reader, w io.Writer) error {
+	return ErrSessionNotEnabled
+}
+
+// =============================================================================
+// Changegroup
+// =============================================================================
+
+func NewChangegroup() (*Changegroup, error) {
 	return nil, ErrSessionNotEnabled
+}
+
+func (g *Changegroup) Add(r io.Reader) error {
+	return ErrSessionNotEnabled
+}
+
+func (g *Changegroup) Output(w io.Writer) error {
+	return ErrSessionNotEnabled
+}
+
+func (g *Changegroup) Close() error {
+	return nil
+}
+
+// =============================================================================
+// Rebaser
+// =============================================================================
+
+func NewRebaser() (*Rebaser, error) {
+	return nil, ErrSessionNotEnabled
+}
+
+func (rb *Rebaser) Configure(rebaseData []byte) error {
+	return ErrSessionNotEnabled
+}
+
+func (rb *Rebaser) Rebase(r io.Reader, w io.Writer) error {
+	return ErrSessionNotEnabled
+}
+
+func (rb *Rebaser) Close() {
 }

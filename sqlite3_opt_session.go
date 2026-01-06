@@ -114,8 +114,9 @@ type ConflictHandler func(conflictType ConflictType, iter *ChangesetIterator) Co
 // Session represents an SQLite session object used for tracking changes
 // to database tables.
 type Session struct {
-	s    *C.sqlite3_session
-	conn *SQLiteConn
+	s            *C.sqlite3_session
+	conn         *SQLiteConn
+	filterHandle unsafe.Pointer
 }
 
 // CreateSession creates a new session object for tracking database changes.
@@ -143,6 +144,12 @@ func (c *SQLiteConn) CreateSession(dbName string) (*Session, error) {
 func (s *Session) Close() error {
 	if s.s == nil {
 		return nil
+	}
+
+	// Clean up filter handle if set
+	if s.filterHandle != nil {
+		deleteHandle(s.filterHandle)
+		s.filterHandle = nil
 	}
 
 	C.sqlite3session_delete(s.s)
@@ -314,15 +321,18 @@ func (s *Session) AttachTable(filter TableFilter) error {
 		return errors.New("session is closed")
 	}
 
-	handle := newHandle(s.conn, filter)
-	// Note: We don't delete the handle here because it needs to persist
-	// for the lifetime of the session. It will be cleaned up when the
-	// connection is closed.
+	// Clean up previous filter handle if any
+	if s.filterHandle != nil {
+		deleteHandle(s.filterHandle)
+		s.filterHandle = nil
+	}
+
+	s.filterHandle = newHandle(s.conn, filter)
 
 	C.sqlite3session_table_filter(
 		s.s,
 		(*[0]byte)(C.sessionFilterTrampoline),
-		handle,
+		s.filterHandle,
 	)
 	return nil
 }
